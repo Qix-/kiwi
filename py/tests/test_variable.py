@@ -12,15 +12,16 @@ import sys
 
 import pytest
 
-from kiwisolver import Constraint, Expression, Term, Variable, strength
+from .suites import suites
+from kiwisolver import strength
 
-
+@pytest.mark.parametrize('cls', suites)
 class TestVariable(object):
-    def test_variable_methods(self):
+    def test_variable_methods(self, cls):
         """Test the variable modification methods.
 
         """
-        v = Variable()
+        v = cls.Variable()
         assert v.name() == ""
         v.setName(u'γ')
         assert v.name() == 'γ'
@@ -42,44 +43,44 @@ class TestVariable(object):
         assert str(v) == 'foo'
 
         with pytest.raises(TypeError):
-            Variable(1)
+            cls.Variable(1)
 
 
-    def test_variable_neg(self):
+    def test_variable_neg(self, cls):
         """Test neg on a variable.
 
         """
-        v = Variable("foo")
+        v = cls.Variable("foo")
 
         neg = -v
-        assert isinstance(neg, Term)
+        assert isinstance(neg, cls.Term)
         assert neg.variable() is v and neg.coefficient() == -1
 
 
-    def test_variable_mul(self):
+    def test_variable_mul(self, cls):
         """Test variable multiplications.
 
         """
-        v = Variable("foo")
-        v2 = Variable('bar')
+        v = cls.Variable("foo")
+        v2 = cls.Variable('bar')
 
         for mul in (v * 2.0, 2 * v):
-            assert isinstance(mul, Term)
+            assert isinstance(mul, cls.Term)
             assert mul.variable() is v and mul.coefficient() == 2
 
         with pytest.raises(TypeError):
             v * v2
 
 
-    def test_variable_division(self):
+    def test_variable_division(self, cls):
         """Test variable divisions.
 
         """
-        v = Variable("foo")
-        v2 = Variable('bar')
+        v = cls.Variable("foo")
+        v2 = cls.Variable('bar')
 
         div = v / 2.0
-        assert isinstance(div, Term)
+        assert isinstance(div, cls.Term)
         assert div.variable() is v and div.coefficient() == 0.5
 
         with pytest.raises(TypeError):
@@ -89,22 +90,22 @@ class TestVariable(object):
             v / 0
 
 
-    def test_variable_addition(self):
+    def test_variable_addition(self, cls):
         """Test variable additions.
 
         """
-        v = Variable("foo")
-        v2 = Variable('bar')
+        v = cls.Variable("foo")
+        v2 = cls.Variable('bar')
 
         for add in (v + 2, 2.0 + v):
-            assert isinstance(add, Expression)
+            assert isinstance(add, cls.Expression)
             assert add.constant() == 2
             terms = add.terms()
             assert (len(terms) == 1 and terms[0].variable() is v and
                     terms[0].coefficient() == 1)
 
         add2 = v + v2
-        assert isinstance(add2, Expression)
+        assert isinstance(add2, cls.Expression)
         assert add2.constant() == 0
         terms = add2.terms()
         assert (len(terms) == 2 and
@@ -115,22 +116,22 @@ class TestVariable(object):
             v + ''
 
 
-    def test_variable_sub(self):
+    def test_variable_sub(self, cls):
         """Test variable substractions.
 
         """
-        v = Variable("foo")
-        v2 = Variable('bar')
+        v = cls.Variable("foo")
+        v2 = cls.Variable('bar')
 
         for sub, diff in zip((v - 2, 2 - v), (-2, 2)):
-            assert isinstance(sub, Expression)
+            assert isinstance(sub, cls.Expression)
             assert sub.constant() == diff
             terms = sub.terms()
             assert (len(terms) == 1 and terms[0].variable() is v and
                     terms[0].coefficient() == -math.copysign(1, diff))
 
         sub2 = v - v2
-        assert isinstance(sub2, Expression)
+        assert isinstance(sub2, cls.Expression)
         assert sub2.constant() == 0
         terms = sub2.terms()
         assert (len(terms) == 2 and
@@ -138,17 +139,17 @@ class TestVariable(object):
                 terms[1].variable() is v2 and terms[1].coefficient() == -1)
 
 
-    def test_variable_rich_compare_operations(self):
+    def test_variable_rich_compare_operations(self, cls):
         """Test using comparison on variables.
 
         """
-        v = Variable('foo')
-        v2 = Variable(u'γ')
+        v = cls.Variable('foo')
+        v2 = cls.Variable(u'γ')
 
         for op, symbol in ((operator.le, '<='), (operator.eq, '=='),
                            (operator.ge, '>=')):
             c = op(v, v2 + 1)
-            assert isinstance(c, Constraint)
+            assert isinstance(c, cls.Constraint)
             e = c.expression()
             t = e.terms()
             assert len(t) == 2

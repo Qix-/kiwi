@@ -11,16 +11,18 @@ import re
 
 import pytest
 
-from kiwisolver import Constraint, Variable, strength
+from .suites import suites
+from kiwisolver import strength
 
+@pytest.mark.parametrize('cls', suites)
 class TestConstraint(object):
     @pytest.mark.parametrize('op', ('==', '<=', '>='))
-    def test_constraint_creation(self, op):
+    def test_constraint_creation(self, cls, op):
         """Test constraints creation and methods.
 
         """
-        v = Variable('foo')
-        c = Constraint(v + 1, op)
+        v = cls.Variable('foo')
+        c = cls.Constraint(v + 1, op)
 
         assert c.strength() == strength.required and c.op() == op
         e = c.expression()
@@ -32,7 +34,7 @@ class TestConstraint(object):
         assert re.match(constraint_format, str(c))
 
         for s in ('weak', 'medium', 'strong', 'required'):
-            c = Constraint(v + 1, op, s)
+            c = cls.Constraint(v + 1, op, s)
             assert c.strength() == getattr(strength, s)
 
         # Ensure we test garbage collection.
@@ -40,42 +42,42 @@ class TestConstraint(object):
         gc.collect()
 
 
-    def test_constraint_creation2(self):
+    def test_constraint_creation2(self, cls):
         """Test for errors in Constraints creation.
 
         """
-        v = Variable('foo')
+        v = cls.Variable('foo')
 
         with pytest.raises(TypeError) as excinfo:
-            Constraint(1, '==')
+            cls.Constraint(1, '==')
         assert "Expression" in excinfo.exconly()
 
         with pytest.raises(TypeError) as excinfo:
-            Constraint(v + 1, 1)
+            cls.Constraint(v + 1, 1)
         assert "str" in excinfo.exconly()
 
         with pytest.raises(ValueError) as excinfo:
-            Constraint(v + 1, '!=')
+            cls.Constraint(v + 1, '!=')
         assert "relational operator" in excinfo.exconly()
 
 
     @pytest.mark.parametrize("op", ('==', '<=', '>='))
-    def test_constraint_repr(self, op):
+    def test_constraint_repr(self, cls, op):
         """Test the repr method of a constraint object.
 
         """
-        v = Variable('foo')
-        c = Constraint(v + 1, op)
+        v = cls.Variable('foo')
+        c = cls.Constraint(v + 1, op)
 
         assert op in repr(c)
 
 
-    def test_constraint_or_operator(self):
+    def test_constraint_or_operator(self, cls):
         """Test modifying a constraint strength using the | operator.
 
         """
-        v = Variable('foo')
-        c = Constraint(v + 1, u'==')
+        v = cls.Variable('foo')
+        c = cls.Constraint(v + 1, u'==')
 
         for s in (u'weak', 'medium', 'strong', u'required',
                   strength.create(1, 1, 0)):

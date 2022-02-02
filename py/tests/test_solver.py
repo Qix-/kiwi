@@ -7,30 +7,31 @@
 #------------------------------------------------------------------------------
 import pytest
 
-from kiwisolver import (Solver, Variable,
-                        DuplicateEditVariable, UnknownEditVariable,
+from .suites import suites
+from kiwisolver import (DuplicateEditVariable, UnknownEditVariable,
                         DuplicateConstraint, UnknownConstraint,
                         UnsatisfiableConstraint, BadRequiredStrength)
 
+@pytest.mark.parametrize('cls', suites)
 class TestSolver(object):
-    def test_solver_creation(self):
+    def test_solver_creation(self, cls):
         """Test initializing a solver.
 
         """
-        s = Solver()
-        assert isinstance(s, Solver)
+        s = cls.Solver()
+        assert isinstance(s, cls.Solver)
 
         with pytest.raises(TypeError):
-            Solver(Variable())
+            cls.Solver(cls.Variable())
 
 
-    def test_managing_edit_variable(self):
+    def test_managing_edit_variable(self, cls):
         """Test adding/removing edit variables.
 
         """
-        s = Solver()
-        v1 = Variable('foo')
-        v2 = Variable('bar')
+        s = cls.Solver()
+        v1 = cls.Variable('foo')
+        v2 = cls.Variable('bar')
 
         with pytest.raises(TypeError):
             s.hasEditVariable(object())
@@ -63,13 +64,13 @@ class TestSolver(object):
         assert not s.hasEditVariable(v2)
 
 
-    def test_suggesting_values_for_edit_variables(self):
+    def test_suggesting_values_for_edit_variables(self, cls):
         """Test suggesting values in different situations.
 
         """
         # Suggest value for an edit variable entering a weak equality
-        s = Solver()
-        v1 = Variable('foo')
+        s = cls.Solver()
+        v1 = cls.Variable('foo')
 
         s.addEditVariable(v1, 'medium')
         s.addConstraint((v1 == 1) | 'weak')
@@ -79,9 +80,9 @@ class TestSolver(object):
 
         # Suggest a value for an edit variable entering multiple solver rows
         s.reset()
-        v1 = Variable('foo')
-        v2 = Variable('bar')
-        s = Solver()
+        v1 = cls.Variable('foo')
+        v2 = cls.Variable('bar')
+        s = cls.Solver()
 
         s.addEditVariable(v2, 'weak')
         s.addConstraint(v1 + v2 == 0)
@@ -92,13 +93,13 @@ class TestSolver(object):
         assert v2.value() <= -1
 
 
-    def test_managing_constraints(self):
+    def test_managing_constraints(self, cls):
         """Test adding/removing constraints.
 
         """
-        s = Solver()
-        v = Variable('foo')
-        v2 = Variable('bar')
+        s = cls.Solver()
+        v = cls.Variable('foo')
+        v2 = cls.Variable('bar')
         c1 = v >= 1
         c2 = v <= 0
         c3 = ((v2 >= 1) and (v2 <= 0))
@@ -131,12 +132,12 @@ class TestSolver(object):
         assert not s.hasConstraint(c2)
 
 
-    def test_solving_under_constrained_system(self):
+    def test_solving_under_constrained_system(self, cls):
         """Test solving an under constrained system.
 
         """
-        s = Solver()
-        v = Variable('foo')
+        s = cls.Solver()
+        v = cls.Variable('foo')
         c = 2*v + 1 >= 0
         s.addEditVariable(v, 'weak')
         s.addConstraint(c)
@@ -148,13 +149,13 @@ class TestSolver(object):
         assert c.expression().terms()[0].variable().value() == 10
 
 
-    def test_solving_with_strength(self):
+    def test_solving_with_strength(self, cls):
         """Test solving a system with unstatisfiable non-required constraint.
 
         """
-        v1 = Variable('foo')
-        v2 = Variable('bar')
-        s = Solver()
+        v1 = cls.Variable('foo')
+        v2 = cls.Variable('bar')
+        s = cls.Solver()
 
         s.addConstraint(v1 + v2 == 0)
         s.addConstraint(v1 == 10)
@@ -209,13 +210,13 @@ class TestSolver(object):
     # """
 
 
-    def test_dumping_solver(self, capsys):
+    def test_dumping_solver(self, cls, capsys):
         """Test dumping the solver internal to stdout.
 
         """
-        v1 = Variable('foo')
-        v2 = Variable('bar')
-        s = Solver()
+        v1 = cls.Variable('foo')
+        v2 = cls.Variable('bar')
+        s = cls.Solver()
 
         s.addEditVariable(v2, 'weak')
         s.addConstraint(v1 + v2 == 0)
@@ -236,7 +237,7 @@ class TestSolver(object):
             assert header in state
 
 
-    def test_handling_infeasible_constraints(self):
+    def test_handling_infeasible_constraints(self, cls):
         """Test that we properly handle infeasible constraints.
 
         We use the example of the cassowary paper to generate an infeasible
@@ -244,10 +245,10 @@ class TestSolver(object):
         the dual optimization.
 
         """
-        xm = Variable('xm')
-        xl = Variable('xl')
-        xr = Variable('xr')
-        s = Solver()
+        xm = cls.Variable('xm')
+        xl = cls.Variable('xl')
+        xr = cls.Variable('xr')
+        s = cls.Solver()
 
         s.addEditVariable(xm, 'strong')
         s.addEditVariable(xl, 'weak')
@@ -272,13 +273,13 @@ class TestSolver(object):
         assert xr.value() == 100
 
 
-    def test_constraint_violated(self):
+    def test_constraint_violated(self, cls):
         """Test running a solver and check that constraints
         report they've been violated
 
         """
-        s = Solver()
-        v = Variable('foo')
+        s = cls.Solver()
+        v = cls.Variable('foo')
 
         c1 = (v >= 10) | 'required'
         c2 = (v <= -5) | 'weak'
