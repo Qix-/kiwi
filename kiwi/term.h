@@ -9,29 +9,29 @@
 #include <utility>
 #include "variable.h"
 
-
 namespace kiwi
 {
 
-class Term
+template <typename TValue>
+class BasicTerm
 {
 
 public:
 
-	Term( Variable variable, double coefficient = 1.0 ) :
+	BasicTerm( BasicVariable<TValue> variable, double coefficient = 1.0 ) :
 		m_variable( std::move(variable) ), m_coefficient( coefficient ) {}
 
 	// to facilitate efficient map -> vector copies
-	Term( const std::pair<const Variable, double>& pair ) :
+	BasicTerm( const std::pair<const BasicVariable<TValue>, double>& pair ) :
 		m_variable( pair.first ), m_coefficient( pair.second ) {}
 
-	Term(const Term&) = default;
+	BasicTerm(const BasicTerm<TValue>&) = default;
 
-	Term(Term&&) noexcept = default;
+	BasicTerm(BasicTerm<TValue>&&) noexcept = default;
 
-	~Term() = default;
+	~BasicTerm() = default;
 
-	const Variable& variable() const
+	const BasicVariable<TValue>& variable() const
 	{
 		return m_variable;
 	}
@@ -41,19 +41,22 @@ public:
 		return m_coefficient;
 	}
 
-	double value() const
+	TValue value() const
 	{
 		return m_coefficient * m_variable.value();
 	}
 
-	Term& operator=(const Term&) = default;
+	BasicTerm<TValue>& operator=(const BasicTerm<TValue>&) = default;
 
-	Term& operator=(Term&&) noexcept = default;
+	BasicTerm<TValue>& operator=(BasicTerm<TValue>&&) noexcept = default;
 
 private:
 
-	Variable m_variable;
+	BasicVariable<TValue> m_variable;
 	double m_coefficient;
 };
+
+using Term = BasicTerm<double>;
+using IntTerm = BasicTerm<long long>;
 
 } // namespace kiwi

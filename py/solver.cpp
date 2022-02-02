@@ -34,10 +34,9 @@ Solver_new( PyTypeObject* type, PyObject* args, PyObject* kwargs )
 void
 Solver_dealloc( Solver* self )
 {
-	self->solver.~Solver();
+	self->solver.~BasicSolver();
 	Py_TYPE( self )->tp_free( pyobject_cast( self ) );
 }
-
 
 PyObject*
 Solver_addConstraint( Solver* self, PyObject* other )
@@ -49,12 +48,12 @@ Solver_addConstraint( Solver* self, PyObject* other )
 	{
 		self->solver.addConstraint( cn->constraint );
 	}
-	catch( const kiwi::DuplicateConstraint& )
+	catch( const kiwi::DuplicateConstraint<double>& )
 	{
 		PyErr_SetObject( DuplicateConstraint, other );
 		return 0;
 	}
-	catch( const kiwi::UnsatisfiableConstraint& )
+	catch( const kiwi::UnsatisfiableConstraint<double>& )
 	{
 		PyErr_SetObject( UnsatisfiableConstraint, other );
 		return 0;
@@ -73,7 +72,7 @@ Solver_removeConstraint( Solver* self, PyObject* other )
 	{
 		self->solver.removeConstraint( cn->constraint );
 	}
-	catch( const kiwi::UnknownConstraint& )
+	catch( const kiwi::UnknownConstraint<double>& )
 	{
 		PyErr_SetObject( UnknownConstraint, other );
 		return 0;
@@ -109,7 +108,7 @@ Solver_addEditVariable( Solver* self, PyObject* args )
 	{
 		self->solver.addEditVariable( var->variable, strength );
 	}
-	catch( const kiwi::DuplicateEditVariable& )
+	catch( const kiwi::DuplicateEditVariable<double>& )
 	{
 		PyErr_SetObject( DuplicateEditVariable, pyvar );
 		return 0;
@@ -133,7 +132,7 @@ Solver_removeEditVariable( Solver* self, PyObject* other )
 	{
 		self->solver.removeEditVariable( var->variable );
 	}
-	catch( const kiwi::UnknownEditVariable& )
+	catch( const kiwi::UnknownEditVariable<double>& )
 	{
 		PyErr_SetObject( UnknownEditVariable, other );
 		return 0;
@@ -169,7 +168,7 @@ Solver_suggestValue( Solver* self, PyObject* args )
 	{
 		self->solver.suggestValue( var->variable, value );
 	}
-	catch( const kiwi::UnknownEditVariable& )
+	catch( const kiwi::UnknownEditVariable<double>& )
 	{
 		PyErr_SetObject( UnknownEditVariable, pyvar );
 		return 0;

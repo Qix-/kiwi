@@ -68,7 +68,7 @@ void Constraint_dealloc(Constraint *self)
 {
     PyObject_GC_UnTrack(self);
     Constraint_clear(self);
-    self->constraint.~Constraint();
+    self->constraint.~BasicConstraint();
     Py_TYPE(self)->tp_free(pyobject_cast(self));
 }
 

@@ -81,7 +81,7 @@ Variable_dealloc( Variable* self )
 {
 	PyObject_GC_UnTrack( self );
 	Variable_clear( self );
-	self->variable.~Variable();
+	self->variable.~BasicVariable();
 	Py_TYPE( self )->tp_free( pyobject_cast( self ) );
 }
 

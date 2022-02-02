@@ -16,14 +16,15 @@
 namespace kiwi
 {
 
-class Solver
+template <typename TValue>
+class BasicSolver
 {
 
 public:
 
-	Solver() = default;
+	BasicSolver() = default;
 
-	~Solver() = default;
+	~BasicSolver() = default;
 
 	/* Add a constraint to the solver.
 
@@ -36,7 +37,7 @@ public:
 		The given constraint is required and cannot be satisfied.
 
 	*/
-	void addConstraint( const Constraint& constraint )
+	void addConstraint( const BasicConstraint<TValue>& constraint )
 	{
 		m_impl.addConstraint( constraint );
 	}
@@ -49,7 +50,7 @@ public:
 		The given constraint has not been added to the solver.
 
 	*/
-	void removeConstraint( const Constraint& constraint )
+	void removeConstraint( const BasicConstraint<TValue>& constraint )
 	{
 		m_impl.removeConstraint( constraint );
 	}
@@ -57,7 +58,7 @@ public:
 	/* Test whether a constraint has been added to the solver.
 
 	*/
-	bool hasConstraint( const Constraint& constraint ) const
+	bool hasConstraint( const BasicConstraint<TValue>& constraint ) const
 	{
 		return m_impl.hasConstraint( constraint );
 	}
@@ -76,7 +77,7 @@ public:
 		The given strength is >= required.
 
 	*/
-	void addEditVariable( const Variable& variable, double strength )
+	void addEditVariable( const BasicVariable<TValue>& variable, double strength )
 	{
 		m_impl.addEditVariable( variable, strength );
 	}
@@ -89,7 +90,7 @@ public:
 		The given edit variable has not been added to the solver.
 
 	*/
-	void removeEditVariable( const Variable& variable )
+	void removeEditVariable( const BasicVariable<TValue>& variable )
 	{
 		m_impl.removeEditVariable( variable );
 	}
@@ -97,7 +98,7 @@ public:
 	/* Test whether an edit variable has been added to the solver.
 
 	*/
-	bool hasEditVariable( const Variable& variable ) const
+	bool hasEditVariable( const BasicVariable<TValue>& variable ) const
 	{
 		return m_impl.hasEditVariable( variable );
 	}
@@ -115,7 +116,7 @@ public:
 		The given edit variable has not been added to the solver.
 
 	*/
-	void suggestValue( const Variable& variable, double value )
+	void suggestValue( const BasicVariable<TValue>& variable, TValue value )
 	{
 		m_impl.suggestValue( variable, value );
 	}
@@ -168,11 +169,14 @@ public:
 
 private:
 
-	Solver( const Solver& );
+	BasicSolver( const BasicSolver<TValue>& );
 
-	Solver& operator=( const Solver& );
+	BasicSolver& operator=( const BasicSolver<TValue>& );
 
-	impl::SolverImpl m_impl;
+	impl::SolverImpl<TValue> m_impl;
 };
+
+using Solver = BasicSolver<double>;
+using IntSolver = BasicSolver<long long>;
 
 } // namespace kiwi

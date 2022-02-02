@@ -146,7 +146,7 @@ public:
 	*/
     double coefficientFor(const Symbol &symbol) const
     {
-        CellMap::const_iterator it = m_cells.find(symbol);
+        typename CellMap::const_iterator it = m_cells.find(symbol);
         if (it == m_cells.end())
             return 0.0;
         return it->second;

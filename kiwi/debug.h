@@ -23,7 +23,8 @@ class DebugHelper
 {
 
 public:
-    static void dump(const SolverImpl &solver, std::ostream &out)
+    template <typename TValue>
+    static void dump(const SolverImpl<TValue> &solver, std::ostream &out)
     {
         out << "Objective" << std::endl;
         out << "---------" << std::endl;
@@ -31,7 +32,7 @@ public:
         out << std::endl;
         out << "Tableau" << std::endl;
         out << "-------" << std::endl;
-        dump(solver.m_rows, out);
+        dump<TValue>(solver.m_rows, out);
         out << std::endl;
         out << "Infeasible" << std::endl;
         out << "----------" << std::endl;
@@ -39,20 +40,21 @@ public:
         out << std::endl;
         out << "Variables" << std::endl;
         out << "---------" << std::endl;
-        dump(solver.m_vars, out);
+        dump<TValue>(solver.m_vars, out);
         out << std::endl;
         out << "Edit Variables" << std::endl;
         out << "--------------" << std::endl;
-        dump(solver.m_edits, out);
+        dump<TValue>(solver.m_edits, out);
         out << std::endl;
         out << "Constraints" << std::endl;
         out << "-----------" << std::endl;
-        dump(solver.m_cns, out);
+        dump<TValue>(solver.m_cns, out);
         out << std::endl;
         out << std::endl;
     }
 
-    static void dump(const SolverImpl::RowMap &rows, std::ostream &out)
+    template <typename TValue>
+    static void dump(const typename SolverImpl<TValue>::RowMap &rows, std::ostream &out)
     {
         for (const auto &rowPair : rows)
         {
@@ -71,7 +73,8 @@ public:
         }
     }
 
-    static void dump(const SolverImpl::VarMap &vars, std::ostream &out)
+    template <typename TValue>
+    static void dump(const typename SolverImpl<TValue>::VarMap &vars, std::ostream &out)
     {
         for (const auto &varPair : vars)
         {
@@ -81,13 +84,15 @@ public:
         }
     }
 
-    static void dump(const SolverImpl::CnMap &cns, std::ostream &out)
+    template <typename TValue>
+    static void dump(const typename SolverImpl<TValue>::CnMap &cns, std::ostream &out)
     {
         for (const auto &cnPair : cns)
             dump(cnPair.first, out);
     }
 
-    static void dump(const SolverImpl::EditMap &edits, std::ostream &out)
+    template <typename TValue>
+    static void dump(const typename SolverImpl<TValue>::EditMap &edits, std::ostream &out)
     {
         for (const auto &editPair : edits)
             out << editPair.first.name() << std::endl;
@@ -128,7 +133,8 @@ public:
         out << symbol.id();
     }
 
-    static void dump(const Constraint &cn, std::ostream &out)
+    template <typename TValue>
+    static void dump(const BasicConstraint<TValue> &cn, std::ostream &out)
     {
         for (const auto &term : cn.expression().terms())
         {

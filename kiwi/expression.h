@@ -12,51 +12,55 @@
 namespace kiwi
 {
 
-class Expression
+template <typename TValue>
+class BasicExpression
 {
 
 public:
-    Expression(double constant = 0.0) : m_constant(constant) {}
+    BasicExpression(TValue constant = 0.0) : m_constant(constant) {}
 
-    Expression(const Term &term, double constant = 0.0) : m_terms(1, term), m_constant(constant) {}
+    BasicExpression(const BasicTerm<TValue> &term, TValue constant = 0.0) : m_terms(1, term), m_constant(constant) {}
 
-    Expression(std::vector<Term> terms, double constant = 0.0) : m_terms(std::move(terms)), m_constant(constant) {}
+    BasicExpression(std::vector<BasicTerm<TValue>> terms, TValue constant = 0.0) : m_terms(std::move(terms)), m_constant(constant) {}
 
-    Expression(const Expression&) = default;
+    BasicExpression(const BasicExpression<TValue>&) = default;
 
     // Could be marked noexcept but for a bug in the GCC of the manylinux1 image
-    Expression(Expression&&) = default;
+    BasicExpression(BasicExpression<TValue>&&) = default;
 
-    ~Expression() = default;
+    ~BasicExpression() = default;
 
-    const std::vector<Term> &terms() const
+    const std::vector<BasicTerm<TValue>> &terms() const
     {
         return m_terms;
     }
 
-    double constant() const
+    TValue constant() const
     {
         return m_constant;
     }
 
-    double value() const
+    TValue value() const
     {
-        double result = m_constant;
+        TValue result = m_constant;
 
-        for (const Term &term : m_terms)
+        for (const BasicTerm<TValue> &term : m_terms)
             result += term.value();
 
         return result;
     }
 
-    Expression& operator=(const Expression&) = default;
+    BasicExpression<TValue>& operator=(const BasicExpression<TValue>&) = default;
 
     // Could be marked noexcept but for a bug in the GCC of the manylinux1 image
-    Expression& operator=(Expression&&) = default;
+    BasicExpression<TValue>& operator=(BasicExpression<TValue>&&) = default;
 
 private:
-    std::vector<Term> m_terms;
-    double m_constant;
+    std::vector<BasicTerm<TValue>> m_terms;
+    TValue m_constant;
 };
+
+using Expression = BasicExpression<double>;
+using IntExpression = BasicExpression<long long>;
 
 } // namespace kiwi

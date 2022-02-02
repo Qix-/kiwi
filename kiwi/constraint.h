@@ -25,25 +25,26 @@ enum RelationalOperator
     OP_EQ
 };
 
-class Constraint
+template <typename TValue>
+class BasicConstraint
 {
 
 public:
-    Constraint() = default;
+    BasicConstraint() = default;
 
-    Constraint(const Expression &expr,
+    BasicConstraint(const BasicExpression<TValue> &expr,
                RelationalOperator op,
                double strength = strength::required) : m_data(new ConstraintData(expr, op, strength)) {}
 
-    Constraint(const Constraint &other, double strength) : m_data(new ConstraintData(other, strength)) {}
+    BasicConstraint(const BasicConstraint<TValue> &other, double strength) : m_data(new ConstraintData(other, strength)) {}
 
-    Constraint(const Constraint &) = default;
+    BasicConstraint(const BasicConstraint<TValue> &) = default;
 
-    Constraint(Constraint &&) noexcept = default;
+    BasicConstraint(BasicConstraint<TValue> &&) noexcept = default;
 
-    ~Constraint() = default;
+    ~BasicConstraint() = default;
 
-    const Expression &expression() const
+    const BasicExpression<TValue> &expression() const
     {
         return m_data->m_expression;
     }
@@ -75,40 +76,40 @@ public:
         return !m_data;
     }
 
-    Constraint& operator=(const Constraint &) = default;
+    BasicConstraint<TValue>& operator=(const BasicConstraint<TValue> &) = default;
 
-    Constraint& operator=(Constraint &&) noexcept = default;
+    BasicConstraint<TValue>& operator=(BasicConstraint<TValue> &&) noexcept = default;
 
 private:
-    static Expression reduce(const Expression &expr)
+    static BasicExpression<TValue> reduce(const BasicExpression<TValue> &expr)
     {
-        std::map<Variable, double> vars;
+        std::map<BasicVariable<TValue>, double> vars;
         for (const auto & term : expr.terms())
             vars[term.variable()] += term.coefficient();
 
-        std::vector<Term> terms(vars.begin(), vars.end());
-        return Expression(std::move(terms), expr.constant());
+        std::vector<BasicTerm<TValue>> terms(vars.begin(), vars.end());
+        return BasicExpression<TValue>(std::move(terms), expr.constant());
     }
 
     class ConstraintData : public SharedData
     {
 
     public:
-        ConstraintData(const Expression &expr,
+        ConstraintData(const BasicExpression<TValue> &expr,
                        RelationalOperator op,
                        double strength) : SharedData(),
                                           m_expression(reduce(expr)),
                                           m_strength(strength::clip(strength)),
                                           m_op(op) {}
 
-        ConstraintData(const Constraint &other, double strength) : SharedData(),
+        ConstraintData(const BasicConstraint<TValue> &other, double strength) : SharedData(),
                                                                    m_expression(other.expression()),
                                                                    m_strength(strength::clip(strength)),
                                                                    m_op(other.op()) {}
 
         ~ConstraintData() = default;
 
-        Expression m_expression;
+        BasicExpression<TValue> m_expression;
         double m_strength;
         RelationalOperator m_op;
 
@@ -120,20 +121,23 @@ private:
 
     SharedDataPtr<ConstraintData> m_data;
 
-    friend bool operator<(const Constraint &lhs, const Constraint &rhs)
+    friend bool operator<(const BasicConstraint<TValue> &lhs, const BasicConstraint<TValue> &rhs)
     {
         return lhs.m_data < rhs.m_data;
     }
 
-    friend bool operator==(const Constraint &lhs, const Constraint &rhs)
+    friend bool operator==(const BasicConstraint<TValue> &lhs, const BasicConstraint<TValue> &rhs)
     {
         return lhs.m_data == rhs.m_data;
     }
 
-    friend bool operator!=(const Constraint &lhs, const Constraint &rhs)
+    friend bool operator!=(const BasicConstraint<TValue> &lhs, const BasicConstraint<TValue> &rhs)
     {
         return lhs.m_data != rhs.m_data;
     }
 };
+
+using Constraint = BasicConstraint<double>;
+using IntConstraint = BasicConstraint<long long>;
 
 } // namespace kiwi

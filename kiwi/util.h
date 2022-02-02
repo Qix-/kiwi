@@ -7,16 +7,26 @@
 |----------------------------------------------------------------------------*/
 #pragma once
 
+#include <type_traits>
+#include <limits>
+
 namespace kiwi
 {
 
 namespace impl
 {
 
-inline bool nearZero(double value)
+template <typename T, typename std::enable_if<std::is_floating_point<T>::value, bool>::type = true>
+inline bool nearZero(T value)
 {
-    const double eps = 1.0e-8;
-    return value < 0.0 ? -value < eps : value < eps;
+    constexpr T eps = std::numeric_limits<T>::epsilon();
+    return value < T{0} ? -value < eps : value < eps;
+}
+
+template <typename T, typename std::enable_if<std::is_integral<T>::value, bool>::type = true>
+inline bool nearZero(T value)
+{
+    return value == T{0};
 }
 
 } // namespace impl

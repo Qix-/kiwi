@@ -27,6 +27,7 @@ namespace kiwi
 namespace impl
 {
 
+template <typename TValue>
 class SolverImpl
 {
 	friend class DebugHelper;
@@ -40,17 +41,17 @@ class SolverImpl
 	struct EditInfo
 	{
 		Tag tag;
-		Constraint constraint;
-		double constant;
+		BasicConstraint<TValue> constraint;
+		TValue constant;
 	};
 
-	using VarMap = MapType<Variable, Symbol>;
+	using VarMap = MapType<BasicVariable<TValue>, Symbol>;
 
 	using RowMap = MapType<Symbol, Row*>;
 
-	using CnMap = MapType<Constraint, Tag>;
+	using CnMap = MapType<BasicConstraint<TValue>, Tag>;
 
-	using EditMap = MapType<Variable, EditInfo>;
+	using EditMap = MapType<BasicVariable<TValue>, EditInfo>;
 
 	struct DualOptimizeGuard
 	{
@@ -73,17 +74,17 @@ public:
 
 	Throws
 	------
-	DuplicateConstraint
+	DuplicateConstraint<TValue>
 		The given constraint has already been added to the solver.
 
-	UnsatisfiableConstraint
+	UnsatisfiableConstraint<TValue>
 		The given constraint is required and cannot be satisfied.
 
 	*/
-	void addConstraint( const Constraint& constraint )
+	void addConstraint( const BasicConstraint<TValue>& constraint )
 	{
 		if( m_cns.find( constraint ) != m_cns.end() )
-			throw DuplicateConstraint( constraint );
+			throw DuplicateConstraint<TValue>( constraint );
 
 		// Creating a row causes symbols to be reserved for the variables
 		// in the constraint. If this method exits with an exception,
@@ -104,7 +105,7 @@ public:
 		if( subject.type() == Symbol::Invalid && allDummies( *rowptr ) )
 		{
 			if( !nearZero( rowptr->constant() ) )
-				throw UnsatisfiableConstraint( constraint );
+				throw UnsatisfiableConstraint<TValue>( constraint );
 			else
 				subject = tag.marker;
 		}
@@ -115,7 +116,7 @@ public:
 		if( subject.type() == Symbol::Invalid )
 		{
 			if( !addWithArtificialVariable( *rowptr ) )
-				throw UnsatisfiableConstraint( constraint );
+				throw UnsatisfiableConstraint<TValue>( constraint );
 		}
 		else
 		{
@@ -136,15 +137,15 @@ public:
 
 	Throws
 	------
-	UnknownConstraint
+	UnknownConstraint<TValue>
 		The given constraint has not been added to the solver.
 
 	*/
-	void removeConstraint( const Constraint& constraint )
+	void removeConstraint( const BasicConstraint<TValue>& constraint )
 	{
 		auto cn_it = m_cns.find( constraint );
 		if( cn_it == m_cns.end() )
-			throw UnknownConstraint( constraint );
+			throw UnknownConstraint<TValue>( constraint );
 
 		Tag tag( cn_it->second );
 		m_cns.erase( cn_it );
@@ -183,7 +184,7 @@ public:
 	/* Test whether a constraint has been added to the solver.
 
 	*/
-	bool hasConstraint( const Constraint& constraint ) const
+	bool hasConstraint( const BasicConstraint<TValue>& constraint ) const
 	{
 		return m_cns.find( constraint ) != m_cns.end();
 	}
@@ -202,14 +203,14 @@ public:
 		The given strength is >= required.
 
 	*/
-	void addEditVariable( const Variable& variable, double strength )
+	void addEditVariable( const BasicVariable<TValue>& variable, double strength )
 	{
 		if( m_edits.find( variable ) != m_edits.end() )
-			throw DuplicateEditVariable( variable );
+			throw DuplicateEditVariable<TValue>( variable );
 		strength = strength::clip( strength );
 		if( strength == strength::required )
 			throw BadRequiredStrength();
-		Constraint cn( Expression( variable ), OP_EQ, strength );
+		BasicConstraint<TValue> cn( BasicExpression<TValue>( variable ), OP_EQ, strength );
 		addConstraint( cn );
 		EditInfo info;
 		info.tag = m_cns[ cn ];
@@ -222,15 +223,15 @@ public:
 
 	Throws
 	------
-	UnknownEditVariable
+	UnknownEditVariable<TValue>
 		The given edit variable has not been added to the solver.
 
 	*/
-	void removeEditVariable( const Variable& variable )
+	void removeEditVariable( const BasicVariable<TValue>& variable )
 	{
 		auto it = m_edits.find( variable );
 		if( it == m_edits.end() )
-			throw UnknownEditVariable( variable );
+			throw UnknownEditVariable<TValue>( variable );
 		removeConstraint( it->second.constraint );
 		m_edits.erase( it );
 	}
@@ -238,7 +239,7 @@ public:
 	/* Test whether an edit variable has been added to the solver.
 
 	*/
-	bool hasEditVariable( const Variable& variable ) const
+	bool hasEditVariable( const BasicVariable<TValue>& variable ) const
 	{
 		return m_edits.find( variable ) != m_edits.end();
 	}
@@ -250,19 +251,19 @@ public:
 
 	Throws
 	------
-	UnknownEditVariable
+	UnknownEditVariable<TValue>
 		The given edit variable has not been added to the solver.
 
 	*/
-	void suggestValue( const Variable& variable, double value )
+	void suggestValue( const BasicVariable<TValue>& variable, TValue value )
 	{
 		auto it = m_edits.find( variable );
 		if( it == m_edits.end() )
-			throw UnknownEditVariable( variable );
+			throw UnknownEditVariable<TValue>( variable );
 
 		DualOptimizeGuard guard( *this );
 		EditInfo& info = it->second;
-		double delta = value - info.constant;
+		TValue delta = value - info.constant;
 		info.constant = value;
 
 		// Check first if the positive error variable is basic.
@@ -303,7 +304,7 @@ public:
 
 		for (auto &varPair : m_vars)
 		{
-			Variable& var = varPair.first;
+			BasicVariable<TValue>& var = varPair.first;
 			auto row_it = m_rows.find( varPair.second );
 			if( row_it == row_end )
 				var.setValue( 0.0 );
@@ -356,7 +357,7 @@ private:
 	If a symbol does not exist for the variable, one will be created.
 
 	*/
-	Symbol getVarSymbol( const Variable& variable )
+	Symbol getVarSymbol( const BasicVariable<TValue>& variable )
 	{
 		auto it = m_vars.find( variable );
 		if( it != m_vars.end() )
@@ -383,9 +384,9 @@ private:
 	for tracking the movement of the constraint in the tableau.
 
 	*/
-	std::unique_ptr<Row> createRow( const Constraint& constraint, Tag& tag )
+	std::unique_ptr<Row> createRow( const BasicConstraint<TValue>& constraint, Tag& tag )
 	{
-		const Expression& expr( constraint.expression() );
+		const BasicExpression<TValue>& expr( constraint.expression() );
 		std::unique_ptr<Row> row( new Row( expr.constant() ) );
 
 		// Substitute the current basic variables into the row.
@@ -687,7 +688,7 @@ private:
 	the objective function is unbounded.
 
 	*/
-	RowMap::iterator getLeavingRow( const Symbol& entering )
+	typename RowMap::iterator getLeavingRow( const Symbol& entering )
 	{
 		double ratio = std::numeric_limits<double>::max();
 		auto end = m_rows.end();
@@ -730,7 +731,7 @@ private:
 	the marker *should* exist somewhere in the tableau.
 
 	*/
-	RowMap::iterator getMarkerLeavingRow( const Symbol& marker )
+	typename RowMap::iterator getMarkerLeavingRow( const Symbol& marker )
 	{
 		const double dmax = std::numeric_limits<double>::max();
 		double r1 = dmax;
@@ -750,7 +751,7 @@ private:
 			}
 			else if( c < 0.0 )
 			{
-				double r = -it->second->constant() / c;
+				double r = double(-it->second->constant()) / c;
 				if( r < r1 )
 				{
 					r1 = r;
@@ -759,7 +760,7 @@ private:
 			}
 			else
 			{
-				double r = it->second->constant() / c;
+				double r = double(it->second->constant()) / c;
 				if( r < r2 )
 				{
 					r2 = r;
@@ -777,7 +778,7 @@ private:
 	/* Remove the effects of a constraint on the objective function.
 
 	*/
-	void removeConstraintEffects( const Constraint& cn, const Tag& tag )
+	void removeConstraintEffects( const BasicConstraint<TValue>& cn, const Tag& tag )
 	{
 		if( tag.marker.type() == Symbol::Error )
 			removeMarkerEffects( tag.marker, cn.strength() );

@@ -14,11 +14,12 @@
 namespace kiwi
 {
 
+template <typename TValue>
 class UnsatisfiableConstraint : public std::exception
 {
 
 public:
-    UnsatisfiableConstraint(Constraint constraint) : m_constraint(std::move(constraint)) {}
+    UnsatisfiableConstraint(BasicConstraint<TValue> constraint) : m_constraint(std::move(constraint)) {}
 
     ~UnsatisfiableConstraint() noexcept {}
 
@@ -27,20 +28,21 @@ public:
         return "The constraint can not be satisfied.";
     }
 
-    const Constraint &constraint() const
+    const BasicConstraint<TValue> &constraint() const
     {
         return m_constraint;
     }
 
 private:
-    Constraint m_constraint;
+    BasicConstraint<TValue> m_constraint;
 };
 
+template <typename TValue>
 class UnknownConstraint : public std::exception
 {
 
 public:
-    UnknownConstraint(Constraint constraint) : m_constraint(std::move(constraint)) {}
+    UnknownConstraint(BasicConstraint<TValue> constraint) : m_constraint(std::move(constraint)) {}
 
     ~UnknownConstraint() noexcept {}
 
@@ -49,20 +51,21 @@ public:
         return "The constraint has not been added to the solver.";
     }
 
-    const Constraint &constraint() const
+    const BasicConstraint<TValue> &constraint() const
     {
         return m_constraint;
     }
 
 private:
-    Constraint m_constraint;
+    BasicConstraint<TValue> m_constraint;
 };
 
+template <typename TValue>
 class DuplicateConstraint : public std::exception
 {
 
 public:
-    DuplicateConstraint(Constraint constraint) : m_constraint(std::move(constraint)) {}
+    DuplicateConstraint(BasicConstraint<TValue> constraint) : m_constraint(std::move(constraint)) {}
 
     ~DuplicateConstraint() noexcept {}
 
@@ -71,20 +74,21 @@ public:
         return "The constraint has already been added to the solver.";
     }
 
-    const Constraint &constraint() const
+    const BasicConstraint<TValue> &constraint() const
     {
         return m_constraint;
     }
 
 private:
-    Constraint m_constraint;
+    BasicConstraint<TValue> m_constraint;
 };
 
+template <typename TValue>
 class UnknownEditVariable : public std::exception
 {
 
 public:
-    UnknownEditVariable(Variable variable) : m_variable(std::move(variable)) {}
+    UnknownEditVariable(BasicVariable<TValue> variable) : m_variable(std::move(variable)) {}
 
     ~UnknownEditVariable() noexcept {}
 
@@ -93,20 +97,21 @@ public:
         return "The edit variable has not been added to the solver.";
     }
 
-    const Variable &variable() const
+    const BasicVariable<TValue> &variable() const
     {
         return m_variable;
     }
 
 private:
-    Variable m_variable;
+    BasicVariable<TValue> m_variable;
 };
 
+template <typename TValue>
 class DuplicateEditVariable : public std::exception
 {
 
 public:
-    DuplicateEditVariable(Variable variable) : m_variable(std::move(variable)) {}
+    DuplicateEditVariable(BasicVariable<TValue> variable) : m_variable(std::move(variable)) {}
 
     ~DuplicateEditVariable() noexcept {}
 
@@ -115,13 +120,13 @@ public:
         return "The edit variable has already been added to the solver.";
     }
 
-    const Variable &variable() const
+    const BasicVariable<TValue> &variable() const
     {
         return m_variable;
     }
 
 private:
-    Variable m_variable;
+    BasicVariable<TValue> m_variable;
 };
 
 class BadRequiredStrength : public std::exception

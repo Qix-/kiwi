@@ -18,97 +18,103 @@ namespace kiwi
 
 // Variable multiply, divide, and unary invert
 
-inline
-Term operator*( const Variable& variable, double coefficient )
+template <typename TValue> inline
+BasicTerm<TValue> operator*( const BasicVariable<TValue>& variable, TValue coefficient )
 {
-	return Term( variable, coefficient );
+	return BasicTerm<TValue>( variable, coefficient );
 }
 
 
-inline
-Term operator/( const Variable& variable, double denominator )
+template <typename TValue> inline
+BasicTerm<TValue> operator/( const BasicVariable<TValue>& variable, TValue denominator )
 {
-	return variable * ( 1.0 / denominator );
+	return BasicTerm<TValue>( variable, 1.0 / static_cast<double>(denominator) );
 }
 
 
-inline
-Term operator-( const Variable& variable )
+template <typename TValue> inline
+BasicTerm<TValue> operator-( const BasicVariable<TValue>& variable )
 {
-	return variable * -1.0;
+	return variable * TValue{-1};
 }
 
 
 // Term multiply, divide, and unary invert
 
-inline
-Term operator*( const Term& term, double coefficient )
+template <typename TValue> inline
+BasicTerm<TValue> operator*( const BasicTerm<TValue>& term, TValue coefficient )
 {
-	return Term( term.variable(), term.coefficient() * coefficient );
+	return BasicTerm<TValue>( term.variable(), term.coefficient() * double(coefficient) );
 }
 
 
-inline
-Term operator/( const Term& term, double denominator )
+template <typename TValue> inline
+BasicTerm<TValue> operator/( const BasicTerm<TValue>& term, TValue denominator )
 {
-	return term * ( 1.0 / denominator );
+	return BasicTerm<TValue>( term.variable(), term.coefficient() * (1.0 / double(denominator)) );
 }
 
 
-inline
-Term operator-( const Term& term )
+template <typename TValue> inline
+BasicTerm<TValue> operator-( const BasicTerm<TValue>& term )
 {
-	return term * -1.0;
+	return term * TValue{-1};
 }
 
 
 // Expression multiply, divide, and unary invert
 
-inline
-Expression operator*( const Expression& expression, double coefficient )
+template <typename TValue> inline
+BasicExpression<TValue> operator*( const BasicExpression<TValue>& expression, TValue coefficient )
 {
-	std::vector<Term> terms;
+	std::vector<BasicTerm<TValue>> terms;
 	terms.reserve( expression.terms().size() );
 
-	for (const Term &term : expression.terms())
+	for (const BasicTerm<TValue> &term : expression.terms())
 		terms.push_back(term * coefficient);
 
-	return Expression( std::move(terms), expression.constant() * coefficient );
+	return BasicExpression<TValue>( std::move(terms), expression.constant() * coefficient );
 }
 
 
-inline
-Expression operator/( const Expression& expression, double denominator )
+template <typename TValue> inline
+BasicExpression<TValue> operator/( const BasicExpression<TValue>& expression, TValue denominator )
 {
-	return expression * ( 1.0 / denominator );
+	std::vector<BasicTerm<TValue>> terms;
+	terms.reserve( expression.terms().size() );
+
+	for (const BasicTerm<TValue> &term : expression.terms())
+		terms.push_back(term / denominator);
+
+	return BasicExpression<TValue>( std::move(terms), expression.constant() / denominator );
 }
 
 
-inline
-Expression operator-( const Expression& expression )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( const BasicExpression<TValue>& expression )
 {
-	return expression * -1.0;
+	return expression * TValue{-1};
 }
 
 
-// Double multiply
+// Scalar multiply
 
-inline
-Expression operator*( double coefficient, const Expression& expression )
+template <typename TValue> inline
+BasicExpression<TValue> operator*( TValue coefficient, const BasicExpression<TValue>& expression )
 {
 	return expression * coefficient;
 }
 
 
-inline
-Term operator*( double coefficient, const Term& term )
+template <typename TValue> inline
+BasicTerm<TValue> operator*( TValue coefficient, const BasicTerm<TValue>& term )
 {
 	return term * coefficient;
 }
 
 
-inline
-Term operator*( double coefficient, const Variable& variable )
+template <typename TValue> inline
+BasicTerm<TValue> operator*( TValue coefficient, const BasicVariable<TValue>& variable )
 {
 	return variable * coefficient;
 }
@@ -116,65 +122,65 @@ Term operator*( double coefficient, const Variable& variable )
 
 // Expression add and subtract
 
-inline
-Expression operator+( const Expression& first, const Expression& second )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( const BasicExpression<TValue>& first, const BasicExpression<TValue>& second )
 {
-	std::vector<Term> terms;
+	std::vector<BasicTerm<TValue>> terms;
 	terms.reserve( first.terms().size() + second.terms().size() );
 	terms.insert( terms.begin(), first.terms().begin(), first.terms().end() );
 	terms.insert( terms.end(), second.terms().begin(), second.terms().end() );
-	return Expression( std::move(terms), first.constant() + second.constant() );
+	return BasicExpression<TValue>( std::move(terms), first.constant() + second.constant() );
 }
 
 
-inline
-Expression operator+( const Expression& first, const Term& second )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( const BasicExpression<TValue>& first, const BasicTerm<TValue>& second )
 {
-	std::vector<Term> terms;
+	std::vector<BasicTerm<TValue>> terms;
 	terms.reserve( first.terms().size() + 1 );
 	terms.insert( terms.begin(), first.terms().begin(), first.terms().end() );
 	terms.push_back( second );
-	return Expression( std::move(terms), first.constant() );
+	return BasicExpression<TValue>( std::move(terms), first.constant() );
 }
 
 
-inline
-Expression operator+( const Expression& expression, const Variable& variable )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( const BasicExpression<TValue>& expression, const BasicVariable<TValue>& variable )
 {
-	return expression + Term( variable );
+	return expression + BasicTerm<TValue>( variable );
 }
 
 
-inline
-Expression operator+( const Expression& expression, double constant )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( const BasicExpression<TValue>& expression, TValue constant )
 {
-	return Expression( expression.terms(), expression.constant() + constant );
+	return BasicExpression<TValue>( expression.terms(), expression.constant() + constant );
 }
 
 
-inline
-Expression operator-( const Expression& first, const Expression& second )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( const BasicExpression<TValue>& first, const BasicExpression<TValue>& second )
 {
 	return first + -second;
 }
 
 
-inline
-Expression operator-( const Expression& expression, const Term& term )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( const BasicExpression<TValue>& expression, const BasicTerm<TValue>& term )
 {
 	return expression + -term;
 }
 
 
-inline
-Expression operator-( const Expression& expression, const Variable& variable )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( const BasicExpression<TValue>& expression, const BasicVariable<TValue>& variable )
 {
 	return expression + -variable;
 }
 
 
-inline
-Expression operator-( const Expression& expression, double constant )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( const BasicExpression<TValue>& expression, TValue constant )
 {
 	return expression + -constant;
 }
@@ -182,57 +188,57 @@ Expression operator-( const Expression& expression, double constant )
 
 // Term add and subtract
 
-inline
-Expression operator+( const Term& term, const Expression& expression )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( const BasicTerm<TValue>& term, const BasicExpression<TValue>& expression )
 {
 	return expression + term;
 }
 
 
-inline
-Expression operator+( const Term& first, const Term& second )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( const BasicTerm<TValue>& first, const BasicTerm<TValue>& second )
 {
-	return Expression( { first, second } );
+	return BasicExpression<TValue>( { first, second } );
 }
 
 
-inline
-Expression operator+( const Term& term, const Variable& variable )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( const BasicTerm<TValue>& term, const BasicVariable<TValue>& variable )
 {
-	return term + Term( variable );
+	return term + BasicTerm<TValue>( variable );
 }
 
 
-inline
-Expression operator+( const Term& term, double constant )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( const BasicTerm<TValue>& term, TValue constant )
 {
-	return Expression( term, constant );
+	return BasicExpression<TValue>( term, constant );
 }
 
 
-inline
-Expression operator-( const Term& term, const Expression& expression )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( const BasicTerm<TValue>& term, const BasicExpression<TValue>& expression )
 {
 	return -expression + term;
 }
 
 
-inline
-Expression operator-( const Term& first, const Term& second )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( const BasicTerm<TValue>& first, const BasicTerm<TValue>& second )
 {
 	return first + -second;
 }
 
 
-inline
-Expression operator-( const Term& term, const Variable& variable )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( const BasicTerm<TValue>& term, const BasicVariable<TValue>& variable )
 {
 	return term + -variable;
 }
 
 
-inline
-Expression operator-( const Term& term, double constant )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( const BasicTerm<TValue>& term, TValue constant )
 {
 	return term + -constant;
 }
@@ -240,101 +246,101 @@ Expression operator-( const Term& term, double constant )
 
 // Variable add and subtract
 
-inline
-Expression operator+( const Variable& variable, const Expression& expression )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( const BasicVariable<TValue>& variable, const BasicExpression<TValue>& expression )
 {
 	return expression + variable;
 }
 
 
-inline
-Expression operator+( const Variable& variable, const Term& term )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( const BasicVariable<TValue>& variable, const BasicTerm<TValue>& term )
 {
 	return term + variable;
 }
 
 
-inline
-Expression operator+( const Variable& first, const Variable& second )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( const BasicVariable<TValue>& first, const BasicVariable<TValue>& second )
 {
-	return Term( first ) + second;
+	return BasicTerm<TValue>( first ) + second;
 }
 
 
-inline
-Expression operator+( const Variable& variable, double constant )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( const BasicVariable<TValue>& variable, TValue constant )
 {
-	return Term( variable ) + constant;
+	return BasicTerm<TValue>( variable ) + constant;
 }
 
 
-inline
-Expression operator-( const Variable& variable, const Expression& expression )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( const BasicVariable<TValue>& variable, const BasicExpression<TValue>& expression )
 {
 	return variable + -expression;
 }
 
 
-inline
-Expression operator-( const Variable& variable, const Term& term )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( const BasicVariable<TValue>& variable, const BasicTerm<TValue>& term )
 {
 	return variable + -term;
 }
 
 
-inline
-Expression operator-( const Variable& first, const Variable& second )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( const BasicVariable<TValue>& first, const BasicVariable<TValue>& second )
 {
 	return first + -second;
 }
 
 
-inline
-Expression operator-( const Variable& variable, double constant )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( const BasicVariable<TValue>& variable, TValue constant )
 {
 	return variable + -constant;
 }
 
 
-// Double add and subtract
+// Scalar add and subtract
 
-inline
-Expression operator+( double constant, const Expression& expression )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( TValue constant, const BasicExpression<TValue>& expression )
 {
 	return expression + constant;
 }
 
 
-inline
-Expression operator+( double constant, const Term& term )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( TValue constant, const BasicTerm<TValue>& term )
 {
 	return term + constant;
 }
 
 
-inline
-Expression operator+( double constant, const Variable& variable )
+template <typename TValue> inline
+BasicExpression<TValue> operator+( TValue constant, const BasicVariable<TValue>& variable )
 {
 	return variable + constant;
 }
 
 
-inline
-Expression operator-( double constant, const Expression& expression )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( TValue constant, const BasicExpression<TValue>& expression )
 {
 	return -expression + constant;
 }
 
 
-inline
-Expression operator-( double constant, const Term& term )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( TValue constant, const BasicTerm<TValue>& term )
 {
 	return -term + constant;
 }
 
 
-inline
-Expression operator-( double constant, const Variable& variable )
+template <typename TValue> inline
+BasicExpression<TValue> operator-( TValue constant, const BasicVariable<TValue>& variable )
 {
 	return -variable + constant;
 }
@@ -342,321 +348,321 @@ Expression operator-( double constant, const Variable& variable )
 
 // Expression relations
 
-inline
-Constraint operator==( const Expression& first, const Expression& second )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( const BasicExpression<TValue>& first, const BasicExpression<TValue>& second )
 {
-	return Constraint( first - second, OP_EQ );
+	return BasicConstraint<TValue>( first - second, OP_EQ );
 }
 
 
-inline
-Constraint operator==( const Expression& expression, const Term& term )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( const BasicExpression<TValue>& expression, const BasicTerm<TValue>& term )
 {
-	return expression == Expression( term );
+	return expression == BasicExpression<TValue>( term );
 }
 
 
-inline
-Constraint operator==( const Expression& expression, const Variable& variable )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( const BasicExpression<TValue>& expression, const BasicVariable<TValue>& variable )
 {
-	return expression == Term( variable );
+	return expression == BasicTerm<TValue>( variable );
 }
 
 
-inline
-Constraint operator==( const Expression& expression, double constant )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( const BasicExpression<TValue>& expression, TValue constant )
 {
-	return expression == Expression( constant );
+	return expression == BasicExpression<TValue>( constant );
 }
 
 
-inline
-Constraint operator<=( const Expression& first, const Expression& second )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( const BasicExpression<TValue>& first, const BasicExpression<TValue>& second )
 {
-	return Constraint( first - second, OP_LE );
+	return BasicConstraint<TValue>( first - second, OP_LE );
 }
 
 
-inline
-Constraint operator<=( const Expression& expression, const Term& term )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( const BasicExpression<TValue>& expression, const BasicTerm<TValue>& term )
 {
-	return expression <= Expression( term );
+	return expression <= BasicExpression<TValue>( term );
 }
 
 
-inline
-Constraint operator<=( const Expression& expression, const Variable& variable )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( const BasicExpression<TValue>& expression, const BasicVariable<TValue>& variable )
 {
-	return expression <= Term( variable );
+	return expression <= BasicTerm<TValue>( variable );
 }
 
 
-inline
-Constraint operator<=( const Expression& expression, double constant )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( const BasicExpression<TValue>& expression, TValue constant )
 {
-	return expression <= Expression( constant );
+	return expression <= BasicExpression<TValue>( constant );
 }
 
 
-inline
-Constraint operator>=( const Expression& first, const Expression& second )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( const BasicExpression<TValue>& first, const BasicExpression<TValue>& second )
 {
-	return Constraint( first - second, OP_GE );
+	return BasicConstraint<TValue>( first - second, OP_GE );
 }
 
 
-inline
-Constraint operator>=( const Expression& expression, const Term& term )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( const BasicExpression<TValue>& expression, const BasicTerm<TValue>& term )
 {
-	return expression >= Expression( term );
+	return expression >= BasicExpression<TValue>( term );
 }
 
 
-inline
-Constraint operator>=( const Expression& expression, const Variable& variable )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( const BasicExpression<TValue>& expression, const BasicVariable<TValue>& variable )
 {
-	return expression >= Term( variable );
+	return expression >= BasicTerm<TValue>( variable );
 }
 
 
-inline
-Constraint operator>=( const Expression& expression, double constant )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( const BasicExpression<TValue>& expression, TValue constant )
 {
-	return expression >= Expression( constant );
+	return expression >= BasicExpression<TValue>( constant );
 }
 
 
 // Term relations
 
-inline
-Constraint operator==( const Term& term, const Expression& expression )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( const BasicTerm<TValue>& term, const BasicExpression<TValue>& expression )
 {
 	return expression == term;
 }
 
 
-inline
-Constraint operator==( const Term& first, const Term& second )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( const BasicTerm<TValue>& first, const BasicTerm<TValue>& second )
 {
-	return Expression( first ) == second;
+	return BasicExpression<TValue>( first ) == second;
 }
 
 
-inline
-Constraint operator==( const Term& term, const Variable& variable )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( const BasicTerm<TValue>& term, const BasicVariable<TValue>& variable )
 {
-	return Expression( term ) == variable;
+	return BasicExpression<TValue>( term ) == variable;
 }
 
 
-inline
-Constraint operator==( const Term& term, double constant )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( const BasicTerm<TValue>& term, TValue constant )
 {
-	return Expression( term ) == constant;
+	return BasicExpression<TValue>( term ) == constant;
 }
 
 
-inline
-Constraint operator<=( const Term& term, const Expression& expression )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( const BasicTerm<TValue>& term, const BasicExpression<TValue>& expression )
 {
 	return expression >= term;
 }
 
 
-inline
-Constraint operator<=( const Term& first, const Term& second )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( const BasicTerm<TValue>& first, const BasicTerm<TValue>& second )
 {
-	return Expression( first ) <= second;
+	return BasicExpression<TValue>( first ) <= second;
 }
 
 
-inline
-Constraint operator<=( const Term& term, const Variable& variable )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( const BasicTerm<TValue>& term, const BasicVariable<TValue>& variable )
 {
-	return Expression( term ) <= variable;
+	return BasicExpression<TValue>( term ) <= variable;
 }
 
 
-inline
-Constraint operator<=( const Term& term, double constant )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( const BasicTerm<TValue>& term, TValue constant )
 {
-	return Expression( term ) <= constant;
+	return BasicExpression<TValue>( term ) <= constant;
 }
 
 
-inline
-Constraint operator>=( const Term& term, const Expression& expression )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( const BasicTerm<TValue>& term, const BasicExpression<TValue>& expression )
 {
 	return expression <= term;
 }
 
 
-inline
-Constraint operator>=( const Term& first, const Term& second )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( const BasicTerm<TValue>& first, const BasicTerm<TValue>& second )
 {
-	return Expression( first ) >= second;
+	return BasicExpression<TValue>( first ) >= second;
 }
 
 
-inline
-Constraint operator>=( const Term& term, const Variable& variable )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( const BasicTerm<TValue>& term, const BasicVariable<TValue>& variable )
 {
-	return Expression( term ) >= variable;
+	return BasicExpression<TValue>( term ) >= variable;
 }
 
 
-inline
-Constraint operator>=( const Term& term, double constant )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( const BasicTerm<TValue>& term, TValue constant )
 {
-	return Expression( term ) >= constant;
+	return BasicExpression<TValue>( term ) >= constant;
 }
 
 
 // Variable relations
-inline
-Constraint operator==( const Variable& variable, const Expression& expression )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( const BasicVariable<TValue>& variable, const BasicExpression<TValue>& expression )
 {
 	return expression == variable;
 }
 
 
-inline
-Constraint operator==( const Variable& variable, const Term& term )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( const BasicVariable<TValue>& variable, const BasicTerm<TValue>& term )
 {
 	return term == variable;
 }
 
 
-inline
-Constraint operator==( const Variable& first, const Variable& second )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( const BasicVariable<TValue>& first, const BasicVariable<TValue>& second )
 {
-	return Term( first ) == second;
+	return BasicTerm<TValue>( first ) == second;
 }
 
 
-inline
-Constraint operator==( const Variable& variable, double constant )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( const BasicVariable<TValue>& variable, TValue constant )
 {
-	return Term( variable ) == constant;
+	return BasicTerm<TValue>( variable ) == constant;
 }
 
 
-inline
-Constraint operator<=( const Variable& variable, const Expression& expression )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( const BasicVariable<TValue>& variable, const BasicExpression<TValue>& expression )
 {
 	return expression >= variable;
 }
 
 
-inline
-Constraint operator<=( const Variable& variable, const Term& term )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( const BasicVariable<TValue>& variable, const BasicTerm<TValue>& term )
 {
 	return term >= variable;
 }
 
 
-inline
-Constraint operator<=( const Variable& first, const Variable& second )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( const BasicVariable<TValue>& first, const BasicVariable<TValue>& second )
 {
-	return Term( first ) <= second;
+	return BasicTerm<TValue>( first ) <= second;
 }
 
 
-inline
-Constraint operator<=( const Variable& variable, double constant )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( const BasicVariable<TValue>& variable, TValue constant )
 {
-	return Term( variable ) <= constant;
+	return BasicTerm<TValue>( variable ) <= constant;
 }
 
 
-inline
-Constraint operator>=( const Variable& variable, const Expression& expression )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( const BasicVariable<TValue>& variable, const BasicExpression<TValue>& expression )
 {
 	return expression <= variable;
 }
 
 
-inline
-Constraint operator>=( const Variable& variable, const Term& term )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( const BasicVariable<TValue>& variable, const BasicTerm<TValue>& term )
 {
 	return term <= variable;
 }
 
 
-inline
-Constraint operator>=( const Variable& first, const Variable& second )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( const BasicVariable<TValue>& first, const BasicVariable<TValue>& second )
 {
-	return Term( first ) >= second;
+	return BasicTerm<TValue>( first ) >= second;
 }
 
 
-inline
-Constraint operator>=( const Variable& variable, double constant )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( const BasicVariable<TValue>& variable, TValue constant )
 {
-	return Term( variable ) >= constant;
+	return BasicTerm<TValue>( variable ) >= constant;
 }
 
 
-// Double relations
+// Scalar relations
 
-inline
-Constraint operator==( double constant, const Expression& expression )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( TValue constant, const BasicExpression<TValue>& expression )
 {
 	return expression == constant;
 }
 
 
-inline
-Constraint operator==( double constant, const Term& term )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( TValue constant, const BasicTerm<TValue>& term )
 {
 	return term == constant;
 }
 
 
-inline
-Constraint operator==( double constant, const Variable& variable )
+template <typename TValue> inline
+BasicConstraint<TValue> operator==( TValue constant, const BasicVariable<TValue>& variable )
 {
 	return variable == constant;
 }
 
 
-inline
-Constraint operator<=( double constant, const Expression& expression )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( TValue constant, const BasicExpression<TValue>& expression )
 {
 	return expression >= constant;
 }
 
 
-inline
-Constraint operator<=( double constant, const Term& term )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( TValue constant, const BasicTerm<TValue>& term )
 {
 	return term >= constant;
 }
 
 
-inline
-Constraint operator<=( double constant, const Variable& variable )
+template <typename TValue> inline
+BasicConstraint<TValue> operator<=( TValue constant, const BasicVariable<TValue>& variable )
 {
 	return variable >= constant;
 }
 
 
-inline
-Constraint operator>=( double constant, const Expression& expression )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( TValue constant, const BasicExpression<TValue>& expression )
 {
 	return expression <= constant;
 }
 
 
-inline
-Constraint operator>=( double constant, const Term& term )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( TValue constant, const BasicTerm<TValue>& term )
 {
 	return term <= constant;
 }
 
 
-inline
-Constraint operator>=( double constant, const Variable& variable )
+template <typename TValue> inline
+BasicConstraint<TValue> operator>=( TValue constant, const BasicVariable<TValue>& variable )
 {
 	return variable <= constant;
 }
@@ -664,15 +670,15 @@ Constraint operator>=( double constant, const Variable& variable )
 
 // Constraint strength modifier
 
-inline
-Constraint operator|( const Constraint& constraint, double strength )
+template <typename TValue> inline
+BasicConstraint<TValue> operator|( const BasicConstraint<TValue>& constraint, double strength )
 {
-	return Constraint( constraint, strength );
+	return BasicConstraint<TValue>( constraint, strength );
 }
 
 
-inline
-Constraint operator|( double strength, const Constraint& constraint )
+template <typename TValue> inline
+BasicConstraint<TValue> operator|( double strength, const BasicConstraint<TValue>& constraint )
 {
 	return constraint | strength;
 }

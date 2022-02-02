@@ -13,7 +13,8 @@
 namespace kiwi
 {
 
-class Variable
+template <typename TValue>
+class BasicVariable
 {
 
 public:
@@ -24,17 +25,17 @@ public:
         virtual ~Context() {} // LCOV_EXCL_LINE
     };
 
-    Variable(Context *context = 0) : m_data(new VariableData("", context)) {}
+    BasicVariable(Context *context = 0) : m_data(new VariableData("", context)) {}
 
-    Variable(std::string name, Context *context = 0) : m_data(new VariableData(std::move(name), context)) {}
+    BasicVariable(std::string name, Context *context = 0) : m_data(new VariableData(std::move(name), context)) {}
 
-    Variable(const char *name, Context *context = 0) : m_data(new VariableData(name, context)) {}
+    BasicVariable(const char *name, Context *context = 0) : m_data(new VariableData(name, context)) {}
 
-    Variable(const Variable&) = default;
+    BasicVariable(const BasicVariable<TValue>&) = default;
 
-    Variable(Variable&&) noexcept = default;
+    BasicVariable(BasicVariable<TValue>&&) noexcept = default;
 
-    ~Variable() = default;
+    ~BasicVariable() = default;
 
     const std::string &name() const
     {
@@ -61,25 +62,25 @@ public:
         m_data->m_context.reset(context);
     }
 
-    double value() const
+    TValue value() const
     {
         return m_data->m_value;
     }
 
-    void setValue(double value)
+    void setValue(TValue value)
     {
         m_data->m_value = value;
     }
 
     // operator== is used for symbolics
-    bool equals(const Variable &other)
+    bool equals(const BasicVariable<TValue> &other)
     {
         return m_data == other.m_data;
     }
 
-    Variable& operator=(const Variable&) = default;
+    BasicVariable<TValue>& operator=(const BasicVariable<TValue>&) = default;
 
-    Variable& operator=(Variable&&) noexcept = default;
+    BasicVariable<TValue>& operator=(BasicVariable<TValue>&&) noexcept = default;
 
 private:
     class VariableData : public SharedData
@@ -100,7 +101,7 @@ private:
 
         std::string m_name;
         std::unique_ptr<Context> m_context;
-        double m_value;
+        TValue m_value;
 
     private:
         VariableData(const VariableData &other);
@@ -110,10 +111,13 @@ private:
 
     SharedDataPtr<VariableData> m_data;
 
-    friend bool operator<(const Variable &lhs, const Variable &rhs)
+    friend bool operator<(const BasicVariable<TValue> &lhs, const BasicVariable<TValue> &rhs)
     {
         return lhs.m_data < rhs.m_data;
     }
 };
+
+using Variable = BasicVariable<double>;
+using IntVariable = BasicVariable<long long>;
 
 } // namespace kiwi
